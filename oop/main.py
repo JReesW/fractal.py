@@ -10,7 +10,7 @@ class CustomFractal(Fractal):
         super().__init__()
 
     def func(self, z: complex, state) -> complex:
-        return z ** state['exp'] - 1
+        return log(z ** 4 - (z * 1j))
 
     def get_color(self, root, depth, state) -> (int, int, int):
 

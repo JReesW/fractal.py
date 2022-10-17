@@ -113,7 +113,7 @@ class Fractal:
                 print(f"{x} / {self.STEP}")
             for y in range(self.HEIGHT):
                 rl = self.convert_range(x + segment, 0, self.WIDTH, *self.X_RANGE)
-                im = self.convert_range(y, 0, self.HEIGHT, *self.Y_RANGE)
+                im = self.convert_range(y, 0, self.HEIGHT, *self.Y_RANGE[::-1])
 
                 root, depth = self.find_root(rl + im * 1j, roots, state)
                 r, g, b = self.get_color(root, depth, state)
@@ -131,5 +131,5 @@ class Fractal:
         with mp.Pool() as p:
             segments = p.map(partial(self.generate_segment, roots, state), ranges)
 
-        image = Image.fromarray(np.uint8(np.concatenate(segments, axis=1)), mode="RGB").transpose(Image.FLIP_TOP_BOTTOM)
+        image = Image.fromarray(np.uint8(np.concatenate(segments, axis=1)), mode="RGB")
         image.save("output.png")
