@@ -4,14 +4,16 @@ from PIL import Image
 from math import isfinite
 from cmath import log
 from functools import partial
+from abc import ABC, abstractmethod
 
 
 class Escape(Exception):
     """"""
 
 
-class Fractal:
+class _Fractal(ABC):
     def __init__(self):
+        super().__init__()
         self.state = {}
 
         self.WIDTH = 1920
@@ -23,14 +25,15 @@ class Fractal:
 
         self.P = 8  # mp.cpu_count()
         # self.STEP = self.WIDTH // self.P
-        self.FRAMES = 30
+        self.FRAMES = 60
 
     @property
     def STEP(self):
         return self.WIDTH // self.P
 
+    @abstractmethod
     def func(self, z: complex, state) -> complex:
-        return log(z ** 4 - z * (self.state['factor'] * 1j))
+        pass
 
     def deriv(self, z: complex, state) -> complex:
         h = 0.000000001
@@ -123,7 +126,16 @@ class Fractal:
 
         return img
 
-    def generate_image(self):
+
+class FractalImage(_Fractal):
+    def __init__(self):
+        super().__init__()
+
+    @abstractmethod
+    def func(self, z: complex, state) -> complex:
+        pass
+
+    def generate_image(self, output):
         ranges = [i * self.STEP for i in range(self.P)]
         state = {'exp': 4}
         roots = self.find_roots(state)
@@ -132,4 +144,19 @@ class Fractal:
             segments = p.map(partial(self.generate_segment, roots, state), ranges)
 
         image = Image.fromarray(np.uint8(np.concatenate(segments, axis=1)), mode="RGB")
-        image.save("output.png")
+        image.save(output)
+
+
+class FractalAnimation(_Fractal):
+    def __init__(self):
+        super().__init__()
+
+    @abstractmethod
+    def func(self, z: complex, state) -> complex:
+        pass
+
+    def update(self, frame):
+        pass
+
+    def generate_animation(self):
+        pass

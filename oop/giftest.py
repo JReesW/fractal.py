@@ -1,11 +1,11 @@
-from fractal import FractalImage
+from fractal import FractalAnimation
 from cmath import log, e, pi, exp, sin
 
 
 phi = (1 + 5 ** 0.5) / 2
 
 
-class CustomFractal(FractalImage):
+class CustomFractal(FractalAnimation):
     def __init__(self):
         super().__init__()
 
@@ -31,4 +31,4 @@ if __name__ == '__main__':
     fractal.HEIGHT = 1080  # 4320
     fractal.X_RANGE = -10.666, 10.666
     fractal.Y_RANGE = -6, 6
-    fractal.generate_image().save("test.png")
+    fractal.generate_animation().save("test.png")
