@@ -3,6 +3,7 @@ import multiprocessing as mp
 from PIL import Image
 from math import isfinite
 from cmath import log
+from functools import partial
 
 
 class Escape(Exception):
@@ -20,7 +21,7 @@ class Fractal:
         self.X_RANGE = -0.8, 0.8
         self.Y_RANGE = -1.1776, -0.2776
 
-        self.P = mp.cpu_count()
+        self.P = 8  # mp.cpu_count()
         # self.STEP = self.WIDTH // self.P
         self.FRAMES = 30
 
@@ -28,14 +29,14 @@ class Fractal:
     def STEP(self):
         return self.WIDTH // self.P
 
-    def func(self, z: complex) -> complex:
+    def func(self, z: complex, state) -> complex:
         return log(z ** 4 - z * (self.state['factor'] * 1j))
 
-    def deriv(self, z: complex) -> complex:
+    def deriv(self, z: complex, state) -> complex:
         h = 0.000000001
-        return (self.func(z + h) - self.func(z - h)) / (2 * h)
+        return (self.func(z + h, state) - self.func(z - h, state)) / (2 * h)
 
-    def find_roots(self) -> [complex]:
+    def find_roots(self, state) -> [complex]:
         found = []
         x_min = -5
         x_max = 5
@@ -57,9 +58,9 @@ class Fractal:
                             if not isfinite(z.real) or not isfinite(z.imag):
                                 raise Escape
 
-                            if self.deriv(z) != (0 + 0j):
+                            if self.deriv(z, state) != (0 + 0j):
                                 try:
-                                    z -= self.func(z) / self.deriv(z)
+                                    z -= self.func(z, state) / self.deriv(z, state)
                                 except ZeroDivisionError:
                                     raise Escape
                             else:
@@ -69,10 +70,10 @@ class Fractal:
                     continue
         return found
 
-    def find_root(self, z: complex, roots: [complex]) -> (int, int):
+    def find_root(self, z: complex, roots: [complex], state) -> (int, int):
         for i in range(self.MAX_ITERATION):
             try:
-                z -= self.func(z) / self.deriv(z)
+                z -= self.func(z, state) / self.deriv(z, state)
             except:
                 return -1, 0
 
@@ -88,9 +89,7 @@ class Fractal:
     def adapt(val, depth):
         return max(0, val - depth)
 
-    def get_color(self, z: complex, roots: [complex]) -> (int, int, int):
-        root, depth = self.find_root(z, roots)
-
+    def get_color(self, root, depth, state) -> (int, int, int):
         if root == 0:
             return (self.adapt(c, depth) for c in (255, 0, 0))
         elif root == 1:
@@ -106,10 +105,8 @@ class Fractal:
     def convert_range(n, old_mn, old_mx, new_mn, new_mx):
         return (((n - old_mn) * (new_mx - new_mn)) / (old_mx - old_mn)) + new_mn
 
-    def generate_segment(self, segment: int) -> np.ndarray:
+    def generate_segment(self, roots, state, segment: int) -> np.ndarray:
         img = np.zeros(shape=(self.HEIGHT, self.STEP, 3))
-
-        roots = self.find_roots()
 
         for x in range(self.STEP):
             if x % 10 == 0:
@@ -118,7 +115,8 @@ class Fractal:
                 rl = self.convert_range(x + segment, 0, self.WIDTH, *self.X_RANGE)
                 im = self.convert_range(y, 0, self.HEIGHT, *self.Y_RANGE)
 
-                r, g, b = self.get_color(rl + im * 1j, roots)
+                root, depth = self.find_root(rl + im * 1j, roots, state)
+                r, g, b = self.get_color(root, depth, state)
                 img[y, x, 0] = r
                 img[y, x, 1] = g
                 img[y, x, 2] = b
@@ -127,9 +125,11 @@ class Fractal:
 
     def generate_image(self):
         ranges = [i * self.STEP for i in range(self.P)]
+        state = {'exp': 4}
+        roots = self.find_roots(state)
 
         with mp.Pool() as p:
-            segments = p.map(self.generate_segment, ranges)
+            segments = p.map(partial(self.generate_segment, roots, state), ranges)
 
         image = Image.fromarray(np.uint8(np.concatenate(segments, axis=1)), mode="RGB").transpose(Image.FLIP_TOP_BOTTOM)
         image.save("output.png")

@@ -1,5 +1,5 @@
 from fractal import Fractal
-from cmath import log, e, pi
+from cmath import log, e, pi, exp, sin
 
 
 phi = (1 + 5 ** 0.5) / 2
@@ -9,19 +9,20 @@ class CustomFractal(Fractal):
     def __init__(self):
         super().__init__()
 
-    def func(self, z: complex) -> complex:
-        return log(z ** 4 * pi, 1j * e * pi)
+    def func(self, z: complex, state) -> complex:
+        return z ** state['exp'] - 1
 
-    def get_color(self, z: complex, roots: [complex]) -> (int, int, int):
-        # TODO: move find_root() out of this function
-        root, depth = self.find_root(z, roots)
+    def get_color(self, root, depth, state) -> (int, int, int):
+
+        # if root != -1:
+        #     return (self.adapt(c, depth) for c in cmap(root / len(roots))[:3])
 
         if root == 0:
-            return (self.adapt(c, 4 * depth) for c in (220, 220, 220))
+            return (self.adapt(c, 4 * depth) for c in (255, 0, 0))
         elif root == 1:
-            return (self.adapt(c, -4 * depth) for c in (20, 20, 20))
+            return (self.adapt(c, 4 * depth) for c in (0, 255, 0))
         elif root == 2:
-            return (self.adapt(c, -4 * depth) for c in (20, 20, 20))
+            return (self.adapt(c, 4 * depth) for c in (0, 0, 255))
         elif root == 3:
             return (self.adapt(c, 4 * depth) for c in (220, 220, 220))
 
