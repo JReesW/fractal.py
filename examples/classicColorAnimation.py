@@ -1,8 +1,6 @@
 from fractal import FractalAnimation
-from cmath import log
 from math import sin, pi
 
-from oop.fractal import State
 
 phi = (1 + 5 ** 0.5) / 2
 
@@ -15,26 +13,23 @@ class CustomFractal(FractalAnimation):
     def __init__(self):
         super().__init__()
 
-    def func(self, z: complex, state: State) -> complex:
-        return z ** 3 - 1  # state['factor']
+    def func(self, z: complex, state: dict) -> complex:
+        return z ** 3 - 1
 
-    def update(self, frame: int) -> State:
+    def update(self, frame: int) -> dict:
         return {
-            'factor': 1 + (frame / 10),
             'f': 127 * (sin(frame / (self.FRAMES // 2 / pi)) + 1),
             'g': 127 * (sin((frame - (self.FRAMES // 3)) / ((self.FRAMES // 2) / pi)) + 1),
             'h': 127 * (sin((frame + (self.FRAMES // 3)) / ((self.FRAMES // 2) / pi)) + 1),
         }
 
-    def get_color(self, root: int, depth: int, state: State) -> (int, int, int):
+    def get_color(self, root: int, depth: int, state: dict) -> (int, int, int):
         if root == 0:
             return (shade(c, 4 * depth) for c in (state['f'], state['g'], state['h']))
         elif root == 1:
             return (shade(c, 4 * depth) for c in (state['h'], state['f'], state['g']))
         elif root == 2:
             return (shade(c, 4 * depth) for c in (state['g'], state['h'], state['f']))
-        elif root == 3:
-            return (shade(c, 4 * depth) for c in (220, 220, 220))
 
         return 0, 0, 0
 

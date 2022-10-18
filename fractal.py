@@ -1,12 +1,10 @@
 import numpy as np
 import multiprocessing as mp
 from PIL import Image
+
 from math import isfinite
 from functools import partial
 from abc import ABC, abstractmethod
-
-
-State = {str: int | float | complex}
 
 
 class Escape(Exception):
@@ -46,7 +44,7 @@ class _Fractal(ABC):
         return self.WIDTH // self.P
 
     @abstractmethod
-    def func(self, z: complex, state: State) -> complex:
+    def func(self, z: complex, state: dict) -> complex:
         """
         The function on which Newton's method will be applied.
 
@@ -56,11 +54,11 @@ class _Fractal(ABC):
         """
         pass
 
-    def deriv(self, z: complex, state: State) -> complex:
+    def deriv(self, z: complex, state: dict) -> complex:
         h = 0.000000001
         return (self.func(z + h, state) - self.func(z - h, state)) / (2 * h)
 
-    def find_roots(self, state: State) -> [complex]:
+    def find_roots(self, state: dict) -> [complex]:
         found = []
         x_min = -5
         x_max = 5
@@ -94,7 +92,7 @@ class _Fractal(ABC):
                     continue
         return sorted(found, key=lambda c: (round(c.real, 8), round(c.imag, 8)))
 
-    def find_root(self, z: complex, roots: [complex], state: State) -> (int, int):
+    def find_root(self, z: complex, roots: [complex], state: dict) -> (int, int):
         for i in range(self.MAX_ITERATION):
             try:
                 z -= self.func(z, state) / self.deriv(z, state)
@@ -110,14 +108,14 @@ class _Fractal(ABC):
         return -1, 0
 
     @abstractmethod
-    def get_color(self, root: int, depth: int, state: State) -> (int, int, int):
+    def get_color(self, root: int, depth: int, state: dict) -> (int, int, int):
         pass
 
     @staticmethod
     def convert_range(n, old_mn, old_mx, new_mn, new_mx):
         return (((n - old_mn) * (new_mx - new_mn)) / (old_mx - old_mn)) + new_mn
 
-    def generate_segment(self, roots, state, segment: int) -> np.ndarray:
+    def generate_segment(self, roots: [complex], state: dict, segment: int) -> np.ndarray:
         img = np.zeros(shape=(self.HEIGHT, self.STEP, 3))
 
         for x in range(self.STEP):
@@ -157,7 +155,7 @@ class FractalAnimation(_Fractal, ABC):
         super().__init__()
 
     @abstractmethod
-    def update(self, frame: int) -> State:
+    def update(self, frame: int) -> dict:
         """
         Return the new state dictionary based on the current frame
         """
