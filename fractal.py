@@ -2,13 +2,28 @@ import numpy as np
 import multiprocessing as mp
 from PIL import Image
 from math import isfinite
-from cmath import log
 from functools import partial
 from abc import ABC, abstractmethod
 
 
+State = {str: int | float | complex}
+
+
 class Escape(Exception):
     """"""
+
+
+def _correct_extension(filename, extension):
+    return filename.split('.')[-1] == extension
+
+
+def _compare_complex(a: complex, b: complex) -> complex:
+    if a.real > b.real:
+        return a
+    if a.real == b.real:
+        if a.imag > b.imag:
+            return a
+    return b
 
 
 class _Fractal(ABC):
@@ -23,8 +38,7 @@ class _Fractal(ABC):
         self.X_RANGE = -0.8, 0.8
         self.Y_RANGE = -1.1776, -0.2776
 
-        self.P = 8  # mp.cpu_count()
-        # self.STEP = self.WIDTH // self.P
+        self.P = mp.cpu_count()
         self.FRAMES = 60
 
     @property
@@ -32,14 +46,21 @@ class _Fractal(ABC):
         return self.WIDTH // self.P
 
     @abstractmethod
-    def func(self, z: complex, state) -> complex:
+    def func(self, z: complex, state: State) -> complex:
+        """
+        The function on which Newton's method will be applied.
+
+        params:
+        - z: the starting point for Newton's method
+        - state: internal variables, for changing values during animations
+        """
         pass
 
-    def deriv(self, z: complex, state) -> complex:
+    def deriv(self, z: complex, state: State) -> complex:
         h = 0.000000001
         return (self.func(z + h, state) - self.func(z - h, state)) / (2 * h)
 
-    def find_roots(self, state) -> [complex]:
+    def find_roots(self, state: State) -> [complex]:
         found = []
         x_min = -5
         x_max = 5
@@ -71,13 +92,13 @@ class _Fractal(ABC):
                     found.append(z)
                 except (Escape, ZeroDivisionError, OverflowError, ValueError):
                     continue
-        return found
+        return sorted(found, key=lambda c: (round(c.real, 8), round(c.imag, 8)))
 
-    def find_root(self, z: complex, roots: [complex], state) -> (int, int):
+    def find_root(self, z: complex, roots: [complex], state: State) -> (int, int):
         for i in range(self.MAX_ITERATION):
             try:
                 z -= self.func(z, state) / self.deriv(z, state)
-            except:
+            except (ZeroDivisionError, OverflowError, ValueError):
                 return -1, 0
 
             for c, root in enumerate(roots):
@@ -88,21 +109,9 @@ class _Fractal(ABC):
 
         return -1, 0
 
-    @staticmethod
-    def adapt(val, depth):
-        return max(0, val - depth)
-
-    def get_color(self, root, depth, state) -> (int, int, int):
-        if root == 0:
-            return (self.adapt(c, depth) for c in (255, 0, 0))
-        elif root == 1:
-            return (self.adapt(c, depth) for c in (0, 255, 0))
-        elif root == 2:
-            return (self.adapt(c, depth) for c in (0, 0, 255))
-        elif root == 3:
-            return (self.adapt(c, depth) for c in (255, 255, 0))
-
-        return 0, 0, 0
+    @abstractmethod
+    def get_color(self, root: int, depth: int, state: State) -> (int, int, int):
+        pass
 
     @staticmethod
     def convert_range(n, old_mn, old_mx, new_mn, new_mx):
@@ -112,8 +121,8 @@ class _Fractal(ABC):
         img = np.zeros(shape=(self.HEIGHT, self.STEP, 3))
 
         for x in range(self.STEP):
-            if x % 10 == 0:
-                print(f"{x} / {self.STEP}")
+            # if x % 10 == 0:
+            #     print(f"{x} / {self.STEP}")
             for y in range(self.HEIGHT):
                 rl = self.convert_range(x + segment, 0, self.WIDTH, *self.X_RANGE)
                 im = self.convert_range(y, 0, self.HEIGHT, *self.Y_RANGE[::-1])
@@ -127,17 +136,13 @@ class _Fractal(ABC):
         return img
 
 
-class FractalImage(_Fractal):
+class FractalImage(_Fractal, ABC):
     def __init__(self):
         super().__init__()
 
-    @abstractmethod
-    def func(self, z: complex, state) -> complex:
-        pass
-
-    def generate_image(self, output):
+    def generate_image(self, output: str) -> None:
         ranges = [i * self.STEP for i in range(self.P)]
-        state = {'exp': 4}
+        state = {}
         roots = self.find_roots(state)
 
         with mp.Pool() as p:
@@ -147,16 +152,34 @@ class FractalImage(_Fractal):
         image.save(output)
 
 
-class FractalAnimation(_Fractal):
+class FractalAnimation(_Fractal, ABC):
     def __init__(self):
         super().__init__()
 
     @abstractmethod
-    def func(self, z: complex, state) -> complex:
-        pass
+    def update(self, frame: int) -> State:
+        """
+        Return the new state dictionary based on the current frame
+        """
+        return {}
 
-    def update(self, frame):
-        pass
+    def generate_animation(self, output: str) -> None:
+        if not _correct_extension(output, 'gif'):
+            raise Exception("File extension should be '.gif' for an animation!")
 
-    def generate_animation(self):
-        pass
+        ranges = [i * self.STEP for i in range(self.P)]
+        frames: [Image] = []
+
+        for frame in range(self.FRAMES):
+            state = self.update(frame)
+            roots = self.find_roots(state)
+
+            with mp.Pool() as p:
+                segments = p.map(partial(self.generate_segment, roots, state), ranges)
+
+            frames.append(Image.fromarray(np.uint8(np.concatenate(segments, axis=1)), mode="RGB"))
+            print(f"frame {frame} complete")
+
+        first, *rest = frames
+        first.save(output, save_all=True, append_images=rest, duration=1000//30, loop=0)
+
