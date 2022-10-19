@@ -2,9 +2,6 @@ from fractal import FractalAnimation
 from math import sin, pi
 
 
-phi = (1 + 5 ** 0.5) / 2
-
-
 def shade(val, depth):
     return max(0, val - depth)
 
