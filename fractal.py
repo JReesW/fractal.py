@@ -8,22 +8,36 @@ from abc import ABC, abstractmethod
 
 
 class Escape(Exception):
-    """"""
+    """
+    Escapes nested loops, as long as it is caught
+    """
 
 
 def _convert_range(n: float, old_mn: float, old_mx: float, new_mn: float, new_mx: float) -> float:
+    """
+    Convert a number based on its old range to its proportional equivalent in a new range
+    """
     return (((n - old_mn) * (new_mx - new_mn)) / (old_mx - old_mn)) + new_mn
 
 
 def _correct_extension(filename: str, extension: str) -> bool:
+    """
+    Check if a given filename has the given extension
+    """
     return filename.split('.')[-1] == extension
 
 
 def _dist(a: complex, b: complex) -> float:
+    """
+    Return the Euclidean distance between two complex numbers
+    """
     return ((a.real - b.real) ** 2 + (a.imag - b.imag) ** 2) ** 0.5
 
 
 class _Fractal(ABC):
+    """
+    Fractal base class
+    """
     def __init__(self):
         super().__init__()
         self.state = {}
@@ -40,6 +54,9 @@ class _Fractal(ABC):
 
     @property
     def STEP(self):
+        """
+        The width of each segment a process gets
+        """
         return self.WIDTH // self.P
 
     @abstractmethod
@@ -54,10 +71,16 @@ class _Fractal(ABC):
         pass
 
     def _deriv(self, z: complex, state: dict) -> complex:
+        """
+        Approximates the derivative of func()
+        """
         h = 0.000000001
         return (self.func(z + h, state) - self.func(z - h, state)) / (2 * h)
 
     def _find_roots(self, state: dict) -> [complex]:
+        """
+        Scatter 10.000 points to see where they end up, root wise, to preapproximate the roots of func()
+        """
         found = []
         x_min = -5
         x_max = 5
@@ -91,7 +114,10 @@ class _Fractal(ABC):
                     continue
         return sorted(found, key=lambda c: (round(c.real, 8), round(c.imag, 8)))
 
-    def _find_root(self, z: complex, roots: [complex], state: dict) -> (int, int):
+    def _find_root(self, z: complex, roots: [complex], state: dict) -> (int, int, float):
+        """
+        Given a complex number and a list of roots, returns which root it approaches, the depth, and smoothness addend
+        """
         for i in range(self.MAX_ITERATION):
             prev = z
             try:
@@ -128,6 +154,9 @@ class _Fractal(ABC):
         pass
 
     def _generate_segment(self, roots: [complex], state: dict, segment: int) -> np.ndarray:
+        """
+        Generate a segment of the total image, given the roots and the starting point of the segment
+        """
         img = np.zeros(shape=(self.HEIGHT, self.STEP, 3))
 
         for x in range(self.STEP):
