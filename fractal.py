@@ -53,7 +53,7 @@ class _Fractal(ABC):
         self.FRAMES = 60
 
     @property
-    def STEP(self):
+    def STEP(self) -> int:
         """
         The width of each segment a process gets
         """
@@ -79,7 +79,7 @@ class _Fractal(ABC):
 
     def _find_roots(self, state: dict) -> [complex]:
         """
-        Scatter 10.000 points to see where they end up, root wise, to preapproximate the roots of func()
+        Scatter 10.000 points and apply Newton's method to each, to approximate the roots of func()
         """
         found = []
         x_min = -5
@@ -186,7 +186,7 @@ class FractalImage(_Fractal, ABC):
         Render a fractal to the given output path
         """
         if self.WIDTH % self.P != 0:
-            raise Exception(f"Image width ({self.WIDTH}) not evenly divisible by chosen amount of cores ({self.P})")
+            raise Exception(f"Image width ({self.WIDTH}) not evenly divisible by configured amount of cores ({self.P})")
 
         ranges = [i * self.STEP for i in range(self.P)]
         state = {}
@@ -212,7 +212,7 @@ class FractalAnimation(_Fractal, ABC):
         """
         Return the new state dictionary based on the current frame number
         """
-        return {}
+        pass
 
     def generate_animation(self, output: str) -> None:
         """
