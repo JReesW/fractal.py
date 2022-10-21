@@ -6,7 +6,7 @@ def shade(val, depth):
     return max(0, val - depth)
 
 
-class CustomFractal(FractalAnimation):
+class Fractal(FractalAnimation):
     def __init__(self):
         super().__init__()
 
@@ -33,7 +33,7 @@ class CustomFractal(FractalAnimation):
 
 
 if __name__ == '__main__':
-    fractal = CustomFractal()
+    fractal = Fractal()
     fractal.WIDTH = 1920
     fractal.HEIGHT = 1080
     fractal.X_RANGE = -10.666, 10.666

@@ -5,7 +5,7 @@ def shade(val, depth):
     return int(max(0, val - depth))
 
 
-class CustomFractal(FractalImage):
+class Fractal(FractalImage):
     def __init__(self):
         super().__init__()
 
@@ -25,7 +25,7 @@ class CustomFractal(FractalImage):
 
 
 if __name__ == '__main__':
-    frac = CustomFractal()
+    frac = Fractal()
     frac.WIDTH = 7680
     frac.HEIGHT = 4320
     frac.X_RANGE, frac.Y_RANGE = (-0.637, 4.422), (0.555, 3.4)
