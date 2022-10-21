@@ -5,6 +5,7 @@ from PIL import Image
 from math import isfinite, log
 from functools import partial
 from abc import ABC, abstractmethod
+from time import time
 
 
 class Escape(Exception):
@@ -51,6 +52,8 @@ class _Fractal(ABC):
 
         self.P = mp.cpu_count()
         self.FRAMES = 60
+
+        self.TIMED = False
 
     @property
     def STEP(self) -> int:
@@ -185,6 +188,9 @@ class FractalImage(_Fractal, ABC):
         """
         Render a fractal to the given output path
         """
+        start_time = 0
+        if self.TIMED:
+            start_time = time()
         if self.WIDTH % self.P != 0:
             raise Exception(f"Image width ({self.WIDTH}) not evenly divisible by configured amount of cores ({self.P})")
 
@@ -197,6 +203,9 @@ class FractalImage(_Fractal, ABC):
 
         image = Image.fromarray(np.uint8(np.concatenate(segments, axis=1)), mode="RGB")
         image.save(output)
+
+        if self.TIMED:
+            print(f"Took {time() - start_time:.2f} seconds!")
 
 
 class FractalAnimation(_Fractal, ABC):
@@ -218,6 +227,9 @@ class FractalAnimation(_Fractal, ABC):
         """
         Render a fractal animation to the given output path (.gif extension required)
         """
+        start_time = 0
+        if self.TIMED:
+            start_time = time()
         if not _correct_extension(output, 'gif'):
             raise Exception("File extension should be '.gif' for an animation!")
         if self.WIDTH % self.P != 0:
@@ -238,3 +250,6 @@ class FractalAnimation(_Fractal, ABC):
 
         first, *rest = frames
         first.save(output, save_all=True, append_images=rest, duration=1000//30, loop=0)
+
+        if self.TIMED:
+            print(f"Took {time() - start_time:.2f} seconds!")

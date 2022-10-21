@@ -39,5 +39,4 @@ if __name__ == '__main__':
     fractal.X_RANGE = -10.666, 10.666
     fractal.Y_RANGE = -6, 6
     fractal.FRAMES = 180
-    fractal.P = 6
     fractal.generate_animation("classicColorAnimation.gif")
