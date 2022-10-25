@@ -60,7 +60,7 @@ Both classes have the following abstract methods which must be implemented:
   * The function deciding which color to assign to the result
   * Parameter `root: int`: the index of the root reached, generally decides which base color should be used (`-1` if no root is reached)
   * Parameter `depth: int`: the amount of iterations it took to reach this result, generally used for shading
-  * Parameter `smooth: float`: the smoothening factor, to circumvent "banding" (see [this article](https://www.chiark.greenend.org.uk/~sgtatham/newton/))
+  * Parameter `smooth: float`: the smoothening factor, to circumvent "banding" (see [this article](https://www.chiark.greenend.org.uk/~sgtatham/newton/), last part of "Decoration")
   * Parameter `state: dict`: internal information, here the dynamic values can be found which change during an animation
   * Returns a triplet of integers, the RGB values (0 - 255 inclusive)
   
