@@ -99,3 +99,5 @@ TIMED -> Whether to print how long it took to render (default False)
 ```
 
 Finally, the `.generate()` method should be called, which will start generation of the image and will save the image to the given path.
+
+Multiple examples of how to use this can be found in the `examples/` directory.
