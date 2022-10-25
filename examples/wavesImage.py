@@ -6,13 +6,10 @@ def shade(val, depth):
 
 
 class Fractal(FractalImage):
-    def __init__(self):
-        super().__init__()
-
     def func(self, z: complex, state: dict) -> complex:
         return z ** 3 - z ** 1j
 
-    def get_color(self, root: int, depth: int, smooth: float, state: dict) -> (int, int, int):
+    def color(self, root: int, depth: int, smooth: float, state: dict) -> (int, int, int):
         depth += smooth
         if root == 0:
             return (shade(c, 8 * depth) for c in (235, 235, 252))
@@ -29,4 +26,4 @@ if __name__ == '__main__':
     frac.WIDTH = 7680
     frac.HEIGHT = 4320
     frac.X_RANGE, frac.Y_RANGE = (-0.637, 4.422), (0.555, 3.4)
-    frac.generate_image("wavesImage.png")
+    frac.generate("wavesImage.png")

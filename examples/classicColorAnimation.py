@@ -7,9 +7,6 @@ def shade(val, depth):
 
 
 class Fractal(FractalAnimation):
-    def __init__(self):
-        super().__init__()
-
     def func(self, z: complex, state: dict) -> complex:
         return z ** 3 - 1
 
@@ -20,7 +17,7 @@ class Fractal(FractalAnimation):
             'h': 127 * (sin((frame + (self.FRAMES // 3)) / ((self.FRAMES // 2) / pi)) + 1),
         }
 
-    def get_color(self, root: int, depth: int, smooth: float, state: dict) -> (int, int, int):
+    def color(self, root: int, depth: int, smooth: float, state: dict) -> (int, int, int):
         depth += smooth
         if root == 0:
             return (shade(c, 8 * depth) for c in (state['f'], state['g'], state['h']))
@@ -39,4 +36,4 @@ if __name__ == '__main__':
     fractal.X_RANGE = -10.666, 10.666
     fractal.Y_RANGE = -6, 6
     fractal.FRAMES = 180
-    fractal.generate_animation("classicColorAnimation.gif")
+    fractal.generate("classicColorAnimation.gif")

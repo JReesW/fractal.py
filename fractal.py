@@ -41,14 +41,12 @@ class _Fractal(ABC):
     """
     def __init__(self):
         super().__init__()
-        self.state = {}
-
         self.WIDTH = 1920
         self.HEIGHT = 1080
         self.TOLERANCE = 0.000001
-        self.MAX_ITERATION = 100
-        self.X_RANGE = -0.8, 0.8
-        self.Y_RANGE = -1.1776, -0.2776
+        self.MAX_ITERATIONS = 100
+        self.X_RANGE = -7.111, 7.111
+        self.Y_RANGE = -4, 4
 
         self.P = mp.cpu_count()
         self.FRAMES = 60
@@ -56,7 +54,7 @@ class _Fractal(ABC):
         self.TIMED = False
 
     @property
-    def STEP(self) -> int:
+    def step(self) -> int:
         """
         The width of each segment a process gets
         """
@@ -121,7 +119,7 @@ class _Fractal(ABC):
         """
         Given a complex number and a list of roots, returns which root it approaches, the depth, and smoothness addend
         """
-        for i in range(self.MAX_ITERATION):
+        for i in range(self.MAX_ITERATIONS):
             prev = z
             try:
                 z -= self.func(z, state) / self._deriv(z, state)
@@ -143,7 +141,7 @@ class _Fractal(ABC):
         return -1, 0, 0
 
     @abstractmethod
-    def get_color(self, root: int, depth: int, smooth: float, state: dict) -> (int, int, int):
+    def color(self, root: int, depth: int, smooth: float, state: dict) -> (int, int, int):
         """
         Given the index of the found root, the iteration depth it took to find it, and a smoothening addend:
         Return the RGB color for these given values.
@@ -160,15 +158,15 @@ class _Fractal(ABC):
         """
         Generate a segment of the total image, given the roots and the starting point of the segment
         """
-        img = np.zeros(shape=(self.HEIGHT, self.STEP, 3))
+        img = np.zeros(shape=(self.HEIGHT, self.step, 3))
 
-        for x in range(self.STEP):
+        for x in range(self.step):
             for y in range(self.HEIGHT):
                 rl = _convert_range(x + segment, 0, self.WIDTH, *self.X_RANGE)
                 im = _convert_range(y, 0, self.HEIGHT, *self.Y_RANGE[::-1])
 
                 root, depth, smooth = self._find_root(rl + im * 1j, roots, state)
-                r, g, b = self.get_color(root, depth, smooth, state)
+                r, g, b = self.color(root, depth, smooth, state)
                 img[y, x, 0] = r
                 img[y, x, 1] = g
                 img[y, x, 2] = b
@@ -184,7 +182,7 @@ class FractalImage(_Fractal, ABC):
     def __init__(self):
         super().__init__()
 
-    def generate_image(self, output: str) -> None:
+    def generate(self, output: str) -> None:
         """
         Render a fractal to the given output path
         """
@@ -194,7 +192,7 @@ class FractalImage(_Fractal, ABC):
         if self.WIDTH % self.P != 0:
             raise Exception(f"Image width ({self.WIDTH}) not evenly divisible by configured amount of cores ({self.P})")
 
-        ranges = [i * self.STEP for i in range(self.P)]
+        ranges = [i * self.step for i in range(self.P)]
         state = {}
         roots = self._find_roots(state)
 
@@ -223,7 +221,7 @@ class FractalAnimation(_Fractal, ABC):
         """
         pass
 
-    def generate_animation(self, output: str) -> None:
+    def generate(self, output: str) -> None:
         """
         Render a fractal animation to the given output path (.gif extension required)
         """
@@ -235,7 +233,7 @@ class FractalAnimation(_Fractal, ABC):
         if self.WIDTH % self.P != 0:
             raise Exception(f"Image width ({self.WIDTH}) not evenly divisible by chosen amount of cores ({self.P})")
 
-        ranges = [i * self.STEP for i in range(self.P)]
+        ranges = [i * self.step for i in range(self.P)]
         frames: [Image] = []
 
         for frame in range(self.FRAMES):
