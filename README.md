@@ -83,7 +83,7 @@ if __name__ == '__main__':
     fractal.generate("output.png")
 ```
 As can be seen, the classes have some attributes which can be set after instantiation.  
-These are the settings:
+These are generation settings, and they are as follows:
 ```text
 WIDTH -> The width in pixels of the image (default 1920)
 HEIGHT -> The height in pixels of the image (default 1080)
