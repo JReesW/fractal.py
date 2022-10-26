@@ -44,7 +44,7 @@ if __name__ == '__main__':
   fractal = Fractal()
   fractal.generate("output.png")
 ```
-As can be seen, to use the classes, they need to be inherited from.  
+As can be seen: to use the classes, they need to be inherited from.  
 This is because both `FractalImage` and `FractalAnimation` are abstract base classes.  
 They have abstract methods which must be implemented when the class is inherited, otherwise errors will be raised.
 
