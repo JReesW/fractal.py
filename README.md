@@ -1,5 +1,5 @@
 # fractal.py
-Python library to easily generate custom Newton fractals!
+Python module for easily generating custom Newton fractals!
 
 ## About
 Newton fractals are a kind of fractal which can be generated for any holomorphic function $f(z)$, by repeatedly applying Newton's method and assigning a color depending on which root of $f(z)$ it reaches.  
