@@ -8,6 +8,9 @@ from abc import ABC, abstractmethod
 from time import time
 
 
+__version__ = "1.0"
+
+
 class Escape(Exception):
     """
     Escapes nested loops, as long as it is caught
