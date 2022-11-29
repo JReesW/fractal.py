@@ -7,12 +7,13 @@ Newton fractals are a kind of fractal which can be generated for any holomorphic
 This library aims to ease the process of generating these fractals, circumventing a lot of common problems one would run into, and even allowing more complicated functions than just standard polynomials.
 
 All you have to do is provide a function $f(z)$, and a method for determining color.  
-Also able to generate GIFs, provided an update function is given deciding what to change each frame.
+Also able to generate MP4s, provided an update function is given deciding what to change each frame.
 
 ## Installation:
-Install numpy and pillow as follows:  
+Install the necessary libraries as follows:  
 `pip install numpy`  
 `pip install pillow`  
+`pip install opencv-python`  
 
 Then all you have to do is add `fractal.py` to your project, and you should be ready to go!  
 
