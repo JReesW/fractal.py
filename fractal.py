@@ -1,6 +1,7 @@
 import numpy as np
 import multiprocessing as mp
 from PIL import Image
+import cv2
 
 from math import isfinite, log
 from functools import partial
@@ -56,6 +57,9 @@ class _Fractal(ABC):
 
         self.TIMED = False
 
+        self.A = 1
+        self.C = 0
+
     @property
     def step(self) -> int:
         """
@@ -95,7 +99,7 @@ class _Fractal(ABC):
                 z = (x_min + x * step) + (x_min + y * step) * 1j
 
                 try:
-                    for a in range(10):
+                    for a in range(self.MAX_ITERATIONS):
                         for root in found:
                             diff = z - root
 
@@ -125,7 +129,7 @@ class _Fractal(ABC):
         for i in range(self.MAX_ITERATIONS):
             prev = z
             try:
-                z -= self.func(z, state) / self._deriv(z, state)
+                z -= self.A * (self.func(z, state) / self._deriv(z, state)) + self.C
             except (ZeroDivisionError, OverflowError, ValueError):
                 return -1, 0, 0
 
@@ -231,13 +235,13 @@ class FractalAnimation(_Fractal, ABC):
         start_time = 0
         if self.TIMED:
             start_time = time()
-        if not _correct_extension(output, 'gif'):
-            raise Exception("File extension should be '.gif' for an animation!")
+        if not _correct_extension(output, 'mp4'):
+            raise Exception("File extension should be '.mp4' for an animation!")
         if self.WIDTH % self.P != 0:
             raise Exception(f"Image width ({self.WIDTH}) not evenly divisible by chosen amount of cores ({self.P})")
 
         ranges = [i * self.step for i in range(self.P)]
-        frames: [Image] = []
+        out = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*'mp4v'), 30, (self.WIDTH, self.HEIGHT), True)
 
         for frame in range(self.FRAMES):
             state = self.update(frame)
@@ -246,11 +250,10 @@ class FractalAnimation(_Fractal, ABC):
             with mp.Pool() as p:
                 segments = p.map(partial(self._generate_segment, roots, state), ranges)
 
-            frames.append(Image.fromarray(np.uint8(np.concatenate(segments, axis=1)), mode="RGB"))
+            out.write(np.uint8(np.concatenate(segments, axis=1)))
             print(f"frame {frame} complete")
 
-        first, *rest = frames
-        first.save(output, save_all=True, append_images=rest, duration=1000//30, loop=0)
+        out.release()
 
         if self.TIMED:
             print(f"Took {time() - start_time:.2f} seconds!")
